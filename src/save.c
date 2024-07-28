@@ -73,7 +73,7 @@ static struct save_procs {
 #endif
 
 /* need to preserve these during save to avoid accessing freed memory */
-static unsigned ustuck_id = 0, usteed_id = 0;
+static unsigned ustuck_id = 0, usteed_id = 0, ufearedmon_id = 0;
 static struct obj *looseball = (struct obj *) 0;  /* track uball during save and... */
 static struct obj *loosechain = (struct obj *) 0; /* track uchain since saving might free it */
 
@@ -236,6 +236,7 @@ dosave0()
     store_plname_in_file(fd);
     ustuck_id = (u.ustuck ? u.ustuck->m_id : 0);
     usteed_id = (u.usteed ? u.usteed->m_id : 0);
+    ufearedmon_id = (u.fearedmon ? u.fearedmon->m_id : 0);
     /* savelev() might save uball and uchain, releasing their memory if
        FREEING, so we need to check their status now; if hero is swallowed,
        uball and uchain will persist beyond saving map floor and inventory
@@ -260,6 +261,7 @@ dosave0()
      */
     u.ustuck = (struct monst *) 0;
     u.usteed = (struct monst *) 0;
+    u.fearedmon = (struct monst *) 0;
 
     for (ltmp = (xchar) 1; ltmp <= maxledgerno(); ltmp++) {
         if (ltmp == ledger_no(&uz_save))
@@ -372,6 +374,10 @@ register int fd, mode;
         bwrite(fd, (genericptr_t) &ustuck_id, sizeof ustuck_id);
     if (usteed_id)
         bwrite(fd, (genericptr_t) &usteed_id, sizeof usteed_id);
+    if (ufearedmon_id) {
+        bwrite(fd, (genericptr_t) &ufearedmon_id, sizeof ufearedmon_id);
+    }
+        
     bwrite(fd, (genericptr_t) pl_character, sizeof pl_character);
     bwrite(fd, (genericptr_t) pl_fruit, sizeof pl_fruit);
     savefruitchn(fd, mode);
@@ -469,6 +475,7 @@ savestateinlock()
 
             ustuck_id = (u.ustuck ? u.ustuck->m_id : 0);
             usteed_id = (u.usteed ? u.usteed->m_id : 0);
+            ufearedmon_id = (u.fearedmon ? u.fearedmon->m_id : 0);
             /* if ball and/or chain aren't on floor or in invent, keep a copy
                of their pointers; not valid when on floor or in invent */
             looseball = BALL_IN_MON ? uball : 0;
